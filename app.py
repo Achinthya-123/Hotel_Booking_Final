@@ -1,121 +1,85 @@
-from flask import Flask, request, redirect, url_for, render_template
-import os, sqlite3
+from flask import Flask, render_template, request, redirect, url_for
+import os
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
-UPLOAD_FOLDER = 'static/uploads'
+
+# Configure upload folder
+UPLOAD_FOLDER = os.path.join('static', 'uploads')
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# --- Database Setup ---
-def init_db():
-    conn = sqlite3.connect('hotel.db')
-    c = conn.cursor()
-    c.execute('''CREATE TABLE IF NOT EXISTS bookings
-                 (id INTEGER PRIMARY KEY AUTOINCREMENT,
-                  name TEXT, email TEXT, room TEXT, total_days INTEGER, total_price REAL)''')
-    conn.commit()
-    conn.close()
-
-init_db()
-
-# --- Room Prices ---
-prices = {
-    "Standard Room": 2499,
-    "Deluxe Room": 4999,
-    "Premium Room": 8999,
-    "Family Suite": 16999,
-    "Maharaja Suite": 32000
+# Room details dictionary
+rooms = {
+    "standard": {
+        "name": "Standard Room",
+        "capacity": "1-2 people",
+        "price": 2499
+    },
+    "deluxe": {
+        "name": "Deluxe Room",
+        "capacity": "2-3 people",
+        "price": 4999
+    },
+    "premium": {
+        "name": "Premium Room",
+        "capacity": "2-3 people",
+        "price": 8999
+    },
+    "family": {
+        "name": "Family Suite",
+        "capacity": "4-6 people",
+        "price": 16999
+    },
+    "maharaja": {
+        "name": "Maharaja/Presidential Suite",
+        "capacity": "6-8 people",
+        "price": 32000
+    }
 }
 
-# --- Home Page ---
+# Store bookings in memory (for demo; in real app use database)
+bookings = []
+
 @app.route("/")
-def home():
+def index():
     return render_template("index.html")
 
-# --- Upload Room Image ---
-@app.route("/upload", methods=["POST"])
-def upload():
-    file = request.files["room_image"]
-    if file:
-        filepath = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
-        file.save(filepath)
-    return redirect(url_for("home"))
-
-# --- Booking Route ---
 @app.route("/book", methods=["POST"])
-def book():
-    name = request.form["name"]
-    email = request.form["email"]
-    room = request.form["room"]
-    nights = int(request.form["nights"])
-    days = int(request.form["days"])
+def book_room():
+    room_type = request.form.get("room_type")
+    nights = int(request.form.get("nights", 1))
+    customer_name = request.form.get("name", "Guest")
 
-    # Total stay duration
-    total_stay = nights + days
+    if room_type in rooms:
+        room = rooms[room_type]
+        total_cost = room["price"] * nights
+        booking = {
+            "name": customer_name,
+            "room": room["name"],
+            "nights": nights,
+            "total": total_cost
+        }
+        bookings.append(booking)
+        return f"Booking successful! {customer_name} booked {room['name']} for {nights} night(s). Total cost: ₹{total_cost}"
+    else:
+        return "Invalid room selection."
 
-    # Calculate price
-    total_price = prices.get(room, 0) * total_stay
-
-    # Save booking
-    conn = sqlite3.connect('hotel.db')
-    c = conn.cursor()
-    c.execute("INSERT INTO bookings (name,email,room,total_days,total_price) VALUES (?,?,?,?,?)",
-              (name, email, room, total_stay, total_price))
-    conn.commit()
-    conn.close()
-
-    return redirect(url_for("dashboard"))
-
-# --- Dashboard ---
 @app.route("/dashboard")
 def dashboard():
-    conn = sqlite3.connect('hotel.db')
-    c = conn.cursor()
-    c.execute("SELECT * FROM bookings")
-    bookings = c.fetchall()
-    conn.close()
     return render_template("dashboard.html", bookings=bookings)
 
-# --- Delete Booking ---
-@app.route("/delete/<int:booking_id>", methods=["POST"])
-def delete(booking_id):
-    conn = sqlite3.connect('hotel.db')
-    c = conn.cursor()
-    c.execute("DELETE FROM bookings WHERE id=?", (booking_id,))
-    conn.commit()
-    conn.close()
-    return redirect(url_for("dashboard"))
+@app.route("/upload", methods=["POST"])
+def upload_photo():
+    room_type = request.form.get("room_type")
+    photo = request.files.get("photo")
 
-# --- Extend Booking ---
-@app.route("/extend/<int:booking_id>", methods=["POST"])
-def extend(booking_id):
-    conn = sqlite3.connect('hotel.db')
-    c = conn.cursor()
-    c.execute("SELECT room,total_days FROM bookings WHERE id=?", (booking_id,))
-    room, total_days = c.fetchone()
-    total_days += 1
-    new_price = prices[room] * total_days
-    c.execute("UPDATE bookings SET total_days=?, total_price=? WHERE id=?",
-              (total_days, new_price, booking_id))
-    conn.commit()
-    conn.close()
-    return redirect(url_for("dashboard"))
-
-# --- Reduce Booking ---
-@app.route("/reduce/<int:booking_id>", methods=["POST"])
-def reduce(booking_id):
-    conn = sqlite3.connect('hotel.db')
-    c = conn.cursor()
-    c.execute("SELECT room,total_days FROM bookings WHERE id=?", (booking_id,))
-    room, total_days = c.fetchone()
-    if total_days > 1:
-        total_days -= 1
-        new_price = prices[room] * total_days
-        c.execute("UPDATE bookings SET total_days=?, total_price=? WHERE id=?",
-                  (total_days, new_price, booking_id))
-        conn.commit()
-    conn.close()
-    return redirect(url_for("dashboard"))
+    if photo and room_type in rooms:
+        filename = secure_filename(room_type + ".jpg")
+        photo.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        return f"Photo uploaded successfully for {rooms[room_type]['name']}!"
+    else:
+        return "Upload failed. Please select a valid room and photo."
 
 if __name__ == "__main__":
     app.run(debug=True)
