@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Hotel Room Booking</title>
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+</head>
+<body>
+    <h1>Welcome to Our Hotel</h1>
+
+    <!-- Booking Form -->
+    <form action="/book" method="POST">
+        <label>Name: <input type="text" name="name" required></label><br>
+        <label>Email: <input type="email" name="email" required></label><br>
+
+        <h3>Select Your Room:</h3>
+
+        <!-- Standard Room with Carousel -->
+        <div>
+            <input type="radio" name="room" value="Standard Room" required>
+            <label>Standard Room (1-2 people) - ₹2,499/night</label>
+
+            <div id="standardCarousel" class="carousel slide" data-ride="carousel">
+                <div class="carousel-inner">
+                    <div class="carousel-item active">
+                        <img src="{{ url_for('static', filename='uploads/standard1.jpg') }}" class="d-block w-100" alt="Standard Room 1">
+                    </div>
+                    <div class="carousel-item">
+                        <img src="{{ url_for('static', filename='uploads/standard2.jpg') }}" class="d-block w-100" alt="Standard Room 2">
+                    </div>
+                    <div class="carousel-item">
+                        <img src="{{ url_for('static', filename='uploads/standard3.jpg') }}" class="d-block w-100" alt="Standard Room 3">
+                    </div>
+                </div>
+                <a class="carousel-control-prev" href="#standardCarousel" role="button" data-slide="prev">
+                    <span class="carousel-control-prev-icon"></span>
+                </a>
+                <a class="carousel-control-next" href="#standardCarousel" role="button" data-slide="next">
+                    <span class="carousel-control-next-icon"></span>
+                </a>
+            </div>
+        </div>
+
+        <!-- You can repeat similar carousel blocks for Deluxe, Premium, Family Suite, Maharaja Suite -->
+
+        <label>Nights: <input type="number" name="nights" min="0" required></label><br>
+        <label>Days: <input type="number" name="days" min="0" required></label><br>
+
+        <button type="submit">Book Now</button>
+    </form>
+
+    <hr>
+
+    <!-- Admin Upload -->
+    <h2>Admin: Upload Room Photo</h2>
+    <form action="/upload" method="POST" enctype="multipart/form-data">
+        <input type="file" name="room_image" required>
+        <button type="submit">Upload</button>
+    </form>
+
+    <hr>
+    <a href="/dashboard">Go to Admin Dashboard</a>
+</body>
+</html>
