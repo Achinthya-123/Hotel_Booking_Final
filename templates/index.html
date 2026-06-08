@@ -4,29 +4,6 @@
     <meta charset="UTF-8">
     <title>Hotel Booking</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 40px;
-        }
-        h1, h2 {
-            color: #222;
-        }
-        .room {
-            margin-bottom: 30px;
-        }
-        .room img {
-            display: block;
-            margin-top: 10px;
-            border-radius: 8px;
-        }
-        label {
-            font-weight: bold;
-        }
-        input, button {
-            margin-top: 5px;
-        }
-    </style>
 </head>
 <body>
     <h1>Welcome to Our Hotel</h1>
@@ -75,5 +52,9 @@
 
         <button type="submit">Book Now</button>
     </form>
+
+    <hr>
+    <!-- Dashboard link -->
+    <a href="{{ url_for('dashboard') }}">Go to Admin Dashboard</a>
 </body>
 </html>
