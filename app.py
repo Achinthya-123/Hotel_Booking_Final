@@ -1,85 +1,70 @@
 from flask import Flask, render_template, request, redirect, url_for
+import sqlite3
 import os
-from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 
-# Configure upload folder
+# Ensure uploads folder exists
 UPLOAD_FOLDER = os.path.join('static', 'uploads')
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
 
-# Room details dictionary
-rooms = {
-    "standard": {
-        "name": "Standard Room",
-        "capacity": "1-2 people",
-        "price": 2499
-    },
-    "deluxe": {
-        "name": "Deluxe Room",
-        "capacity": "2-3 people",
-        "price": 4999
-    },
-    "premium": {
-        "name": "Premium Room",
-        "capacity": "2-3 people",
-        "price": 8999
-    },
-    "family": {
-        "name": "Family Suite",
-        "capacity": "4-6 people",
-        "price": 16999
-    },
-    "maharaja": {
-        "name": "Maharaja/Presidential Suite",
-        "capacity": "6-8 people",
-        "price": 32000
-    }
+# Database setup
+def init_db():
+    conn = sqlite3.connect('hotel.db')
+    c = conn.cursor()
+    c.execute('''CREATE TABLE IF NOT EXISTS bookings (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT NOT NULL,
+                    email TEXT NOT NULL,
+                    room_type TEXT NOT NULL,
+                    nights INTEGER NOT NULL,
+                    total_price INTEGER NOT NULL
+                )''')
+    conn.commit()
+    conn.close()
+
+init_db()
+
+# Room prices
+ROOM_PRICES = {
+    "standard": 2499,
+    "deluxe": 4999,
+    "premium": 8999,
+    "family": 16999,
+    "maharaja": 32000
 }
 
-# Store bookings in memory (for demo; in real app use database)
-bookings = []
-
-@app.route("/")
+@app.route('/')
 def index():
-    return render_template("index.html")
+    return render_template('index.html')
 
-@app.route("/book", methods=["POST"])
-def book_room():
-    room_type = request.form.get("room_type")
-    nights = int(request.form.get("nights", 1))
-    customer_name = request.form.get("name", "Guest")
+@app.route('/book', methods=['POST'])
+def book():
+    name = request.form['name']
+    email = request.form['email']
+    room_type = request.form['room_type']
+    nights = int(request.form['nights'])
 
-    if room_type in rooms:
-        room = rooms[room_type]
-        total_cost = room["price"] * nights
-        booking = {
-            "name": customer_name,
-            "room": room["name"],
-            "nights": nights,
-            "total": total_cost
-        }
-        bookings.append(booking)
-        return f"Booking successful! {customer_name} booked {room['name']} for {nights} night(s). Total cost: ₹{total_cost}"
-    else:
-        return "Invalid room selection."
+    total_price = ROOM_PRICES[room_type] * nights
 
-@app.route("/dashboard")
+    conn = sqlite3.connect('hotel.db')
+    c = conn.cursor()
+    c.execute("INSERT INTO bookings (name, email, room_type, nights, total_price) VALUES (?, ?, ?, ?, ?)",
+              (name, email, room_type, nights, total_price))
+    conn.commit()
+    conn.close()
+
+    return f"Booking confirmed for {name} ({email}) - {room_type} for {nights} nights. Total: ₹{total_price}"
+
+@app.route('/dashboard')
 def dashboard():
-    return render_template("dashboard.html", bookings=bookings)
+    conn = sqlite3.connect('hotel.db')
+    c = conn.cursor()
+    c.execute("SELECT * FROM bookings")
+    bookings = c.fetchall()
+    conn.close()
+    return render_template('dashboard.html', bookings=bookings)
 
-@app.route("/upload", methods=["POST"])
-def upload_photo():
-    room_type = request.form.get("room_type")
-    photo = request.files.get("photo")
-
-    if photo and room_type in rooms:
-        filename = secure_filename(room_type + ".jpg")
-        photo.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-        return f"Photo uploaded successfully for {rooms[room_type]['name']}!"
-    else:
-        return "Upload failed. Please select a valid room and photo."
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     app.run(debug=True)
