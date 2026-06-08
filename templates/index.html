@@ -4,50 +4,74 @@
     <meta charset="UTF-8">
     <title>Hotel Booking</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+        }
+        h1, h2 {
+            color: #222;
+        }
+        .room {
+            margin-bottom: 30px;
+        }
+        .room img {
+            display: block;
+            margin-top: 10px;
+            border-radius: 8px;
+        }
+        label {
+            font-weight: bold;
+        }
+        input, button {
+            margin-top: 5px;
+        }
+    </style>
 </head>
 <body>
     <h1>Welcome to Our Hotel</h1>
-    <h2>Select Room Type</h2>
-    <form method="POST" action="/book">
-    <label for="name">Full Name:</label>
-    <input type="text" name="name" id="name" required><br><br>
-
-    <label for="email">Email ID:</label>
-    <input type="email" name="email" id="email" required><br><br>
 
     <form method="POST" action="/book">
-        <div>
+        <label for="name">Full Name:</label>
+        <input type="text" name="name" id="name" required><br><br>
+
+        <label for="email">Email ID:</label>
+        <input type="email" name="email" id="email" required><br><br>
+
+        <h2>Select Room Type</h2>
+
+        <div class="room">
             <input type="radio" name="room_type" value="standard" required>
-            <label>Standard Room (1–2 people) – ₹2,499/night</label>
-            <img src="{{ url_for('static', filename='uploads/standard.jpg') }}" alt="Standard Room" width="300">
+            <label>Standard Room (1–2 people) – ₹2,499/night</label><br>
+            <img src="{{ url_for('static', filename='uploads/standard.jpg') }}" alt="Standard Room" width="400">
         </div>
 
-        <div>
+        <div class="room">
             <input type="radio" name="room_type" value="deluxe">
-            <label>Deluxe Room – ₹4,999/night</label>
-            <img src="{{ url_for('static', filename='uploads/deluxe.jpg') }}" alt="Deluxe Room" width="300">
+            <label>Deluxe Room – ₹4,999/night</label><br>
+            <img src="{{ url_for('static', filename='uploads/deluxe.jpg') }}" alt="Deluxe Room" width="400">
         </div>
 
-        <div>
+        <div class="room">
             <input type="radio" name="room_type" value="premium">
-            <label>Premium Room – ₹8,999/night</label>
-            <img src="{{ url_for('static', filename='uploads/premium.jpg') }}" alt="Premium Room" width="300">
+            <label>Premium Room – ₹8,999/night</label><br>
+            <img src="{{ url_for('static', filename='uploads/premium.jpg') }}" alt="Premium Room" width="400">
         </div>
 
-        <div>
+        <div class="room">
             <input type="radio" name="room_type" value="family">
-            <label>Family Suite – ₹16,999/night</label>
-            <img src="{{ url_for('static', filename='uploads/family.jpg') }}" alt="Family Suite" width="300">
+            <label>Family Suite – ₹16,999/night</label><br>
+            <img src="{{ url_for('static', filename='uploads/family.jpg') }}" alt="Family Suite" width="400">
         </div>
 
-        <div>
+        <div class="room">
             <input type="radio" name="room_type" value="maharaja">
-            <label>Maharaja/Presidential Suite – ₹32,000/night</label>
-            <img src="{{ url_for('static', filename='uploads/maharaja.jpg') }}" alt="Maharaja Suite" width="300">
+            <label>Maharaja/Presidential Suite – ₹32,000/night</label><br>
+            <img src="{{ url_for('static', filename='uploads/maharaja.jpg') }}" alt="Maharaja Suite" width="400">
         </div>
 
         <label for="nights">Number of Nights:</label>
-        <input type="number" name="nights" id="nights" min="1" value="1">
+        <input type="number" name="nights" id="nights" min="1" value="1"><br><br>
 
         <button type="submit">Book Now</button>
     </form>
